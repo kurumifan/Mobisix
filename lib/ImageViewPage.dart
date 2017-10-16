@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
+import './LoadingPage.dart';
 
 class ImageViewPage extends StatefulWidget {
 
@@ -36,7 +37,10 @@ class _ImageViewPageState extends State<ImageViewPage> {
         child: new ListView(
           padding: const EdgeInsets.all(20.0),
           children: <Widget>[
-            new Image.network(json['file_url']),
+            new Container(
+              margin: new EdgeInsets.only(bottom: 8.0),
+              child: new Image.network(json['file_url'])
+            ),
             new RaisedButton(onPressed: _save,
               child: new Text('Download',
             textAlign: TextAlign.center)
@@ -68,10 +72,9 @@ class _ImageViewPageState extends State<ImageViewPage> {
       var httpClient = createHttpClient();
       var response = await httpClient.readBytes(img_url, headers: {"User-Agent" : "MobiSix v0.1"});
       var dir = (await getExternalStorageDirectory()).path;
-      var file = await new File('$dir/Mobisix/$img_path').create(recursive: true);
-      print(dir);
-      print(img_path);
+      var file = await new File('$dir/Pictures/Mobisix/$img_path').create(recursive: true);
       await file.writeAsBytes(response);
+      await platform.invokeMethod('mediaScan', {'filepath' : '$dir/Pictures/Mobisix/$img_path'});
     }
   }
 
@@ -88,11 +91,7 @@ class _ImageViewPageState extends State<ImageViewPage> {
   void initState() {
     super.initState();
 
-    _currentComponent = new Scaffold(
-      appBar: new AppBar(
-        title: new Text(title),
-      ),
-    );
+    _currentComponent = new LoadingPage (title: title);
 
     _load();
   }

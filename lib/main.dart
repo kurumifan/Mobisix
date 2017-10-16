@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 import './ImageViewPage.dart';
+import './IndexPage.dart';
 
 void main() {
   runApp(new MobiSix());
@@ -21,7 +22,10 @@ class MobiSix extends StatelessWidget {
         accentColor: Colors.lightBlueAccent.shade100,
         brightness: Brightness.dark,
       ),
-      home: new ImageViewPage(title: 'Mobisix', url: 'https://e621.net/post/show.json?id=1356446'),
+      home: new IndexPage(title: 'Mobisix'),//, url: 'https://e621.net/post/show.json?id=1356446'),
+      routes: <String, WidgetBuilder> {
+        '/search': (BuildContext context) => new ImageViewPage(title: 'page A', url: "sample.com"),
+      },
     );
   }
 }

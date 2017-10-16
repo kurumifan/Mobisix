@@ -1,8 +1,14 @@
-package com.yourcompany.mobisix;
+package cafe.reindeer.mobisix;
+
+import java.io.File;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.content.Context;
+import android.media.MediaScannerConnection;
+import android.media.MediaScannerConnection.MediaScannerConnectionClient;
+import android.net.Uri;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.app.ActivityCompat;
 
@@ -13,6 +19,7 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugins.GeneratedPluginRegistrant;
 
+import cafe.reindeer.mobisix.SingleMediaScanner;
 
 public class MainActivity extends FlutterActivity {
   private static final String CHANNEL = "mobisix/perms";
@@ -36,6 +43,12 @@ public class MainActivity extends FlutterActivity {
               result.success(pcode);
             }
           }
+
+          if (call.method.equals("mediaScan")){
+            String filepath = call.argument("filepath");
+            mediaScan(filepath);
+            result.success(1);
+          }
         }
       });
   }
@@ -44,11 +57,14 @@ public class MainActivity extends FlutterActivity {
     ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 111);
   }
 
+  private void mediaScan(String filepath){
+    new SingleMediaScanner(this, new File(filepath));
+  }
+
   @Override
   public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
     switch (requestCode) {
         case 111: {
-            // If request is cancelled, the result arrays are empty.
             if (grantResults.length > 0
                 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                   pcode = 1;
