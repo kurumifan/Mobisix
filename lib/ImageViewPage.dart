@@ -28,11 +28,40 @@ class _ImageViewPageState extends State<ImageViewPage> {
 
   _ImageViewPageState(this.title, this.json);
 
-  _save() async {
+  Widget _build(BuildContext context) {
+    return new Center(
+      child: new ListView(
+        padding: const EdgeInsets.all(10.0),
+        children: <Widget>[
+          new Container(
+            margin: new EdgeInsets.only(bottom: 4.0),
+            child: new Image.network(json['sample_url'])
+          ),
+          new RaisedButton(
+            child: new Text('Download',
+              textAlign: TextAlign.center),
+            onPressed: (){_save(context);}
+          ),
+        ],
+      ),
+    );
+  }
+
+  _snack(BuildContext ctx) async {
+    Scaffold.of(ctx).showSnackBar(
+      new SnackBar(
+        content: new Text ("Downloading $img_url"),
+        duration: new Duration(seconds: 2)
+      )
+    );
+  }
+
+  _save(BuildContext ctx) async {
     await _getPerms();
     if (_perm == 0){
       return;
     } else {
+      _snack(ctx);
       var httpClient = createHttpClient();
       var response = await httpClient.readBytes(img_url, headers: {"User-Agent" : "MobiSix v0.1"});
       var dir = (await getExternalStorageDirectory()).path;
@@ -54,26 +83,14 @@ class _ImageViewPageState extends State<ImageViewPage> {
   @override
   Widget build(BuildContext context) {
     img_url = json['file_url'];
-    img_path = json['md5'] + json['file_ext'];
+    img_path = json['md5'] + '.' + json['file_ext'];
     return new Scaffold(
       appBar: new AppBar(
         title: new Text(title),
       ),
-      body: new Center(
-        child: new ListView(
-          padding: const EdgeInsets.all(10.0),
-          children: <Widget>[
-            new Container(
-              margin: new EdgeInsets.only(bottom: 4.0),
-              child: new Image.network(json['sample_url'])
-            ),
-            new RaisedButton(onPressed: _save,
-              child: new Text('Download',
-            textAlign: TextAlign.center)
-            ),
-          ],
-        ),
-      ),
+      body: new Builder(
+        builder: _build
+      )
     );
   }
 }

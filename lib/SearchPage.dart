@@ -66,14 +66,18 @@ class _SearchPageState extends State<SearchPage> {
     } else if (page == 1 && _imageQueue.length == 60) {
       ch.add(forwardButton);
     } else {
-      ch = [backButton, forwardButton];
+      ch = [new Container (
+        child: backButton,
+        margin: const EdgeInsets.only(right: 4.0)
+      ), forwardButton];
     }
 
-    Widget _buttonComponent = new Row (
-      children: ch,
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      verticalDirection: VerticalDirection.down
+    Widget _buttonComponent = new Center (
+      child: new Row (
+        children: ch,
+        mainAxisAlignment: MainAxisAlignment.center,
+        verticalDirection: VerticalDirection.up
+      )
     );
 
     setState((){
@@ -84,7 +88,7 @@ class _SearchPageState extends State<SearchPage> {
         body: new Column(
           children: <Widget>[
             new Flexible(
-              flex: 5,
+              flex: 6,
               child: new GridView.builder(
                 itemCount : _imageQueue.length,
                 padding: const EdgeInsets.all(10.0),
