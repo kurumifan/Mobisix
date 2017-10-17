@@ -8,86 +8,110 @@ import 'package:flutter/widgets.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:synchronized/synchronized.dart';
 import './LoadingPage.dart';
+import './ImageViewPage.dart';
+import './ImageButton.dart';
 
 class SearchPage extends StatefulWidget {
 
-  SearchPage({Key key, this.title, this.search}) : super(key: key);
+  SearchPage({Key key, this.title, this.search, this.page}) : super(key: key);
 
   final String title;
   final String search;
+  final int page;
 
   @override
-  _SearchPageState createState() => new _SearchPageState(title, search);
+  _SearchPageState createState() => new _SearchPageState(title, search, page);
 }
 
 class _SearchPageState extends State<SearchPage> {
 
-  _SearchPageState(this.title, this.search);
+  _SearchPageState(this.title, this.search, this.page);
 
   final String title;
   final String search;
+  final int page;
   Widget _currentComponent;
   Queue<Map> _imageQueue = new Queue();
-  int _page = 0;
-  bool _stopped = false;
-  var _loadingMutex = new SynchronizedLock();
 
-  _load() async{
-    print("loading!");
-    print(_page);
+  _forward() {
+    Navigator.of(context).push(new PageRouteBuilder(
+      pageBuilder: (BuildContext context, _, __) {
+        return new SearchPage(title: 'Search', search: search, page: page + 1);
+      }
+    ));
+  }
+
+  _back() {
+    Navigator.of(context).pop();
+  }
+
+  _load() async {
+    Widget forwardButton = new RaisedButton (onPressed: _forward,
+      child: new Icon(Icons.chevron_right));
+
+    Widget backButton = new RaisedButton (onPressed: _back,
+      child: new Icon(Icons.chevron_left));
+
     var httpClient = createHttpClient();
-    var res = await httpClient.read("https://e621.net/post/index.json?limit=100&page=" + _page.toString() + "&tags=" + search,
+    var res = await httpClient.read("https://e621.net/post/index.json?limit=60&page=" + page.toString() + "&tags=" + search,
       headers: {"User-Agent" : "MobiSix v0.1"});
     var json = JSON.decode(res);
     httpClient.close();
     _imageQueue.addAll(json);
-    if (_page == 0) {
-      if (_imageQueue.length < 100) _page = 10;
-      setState((){
-        _currentComponent = new Scaffold(
-          appBar: new AppBar(
-            title: new Text(title),
-          ),
-          body: new GridView.builder(
-            padding: const EdgeInsets.all(10.0),
-            itemBuilder: ibuilder,
-            gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, mainAxisSpacing: 4.0, crossAxisSpacing: 4.0)
-          )
-        );
-      });
+
+    var ch = <Widget>[];
+
+    if (page > 9 || _imageQueue.length < 60){
+      ch.add(backButton);
+    } else if (page == 1 && _imageQueue.length == 60) {
+      ch.add(forwardButton);
     } else {
-      if (_imageQueue.length < 100) _page = 10;
+      ch = [backButton, forwardButton];
     }
+
+    Widget _buttonComponent = new Row (
+      children: ch,
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      verticalDirection: VerticalDirection.down
+    );
+
+    setState((){
+      _currentComponent = new Scaffold(
+        appBar: new AppBar(
+          title: new Text(title),
+        ),
+        body: new Column(
+          children: <Widget>[
+            new Flexible(
+              flex: 5,
+              child: new GridView.builder(
+                itemCount : _imageQueue.length,
+                padding: const EdgeInsets.all(10.0),
+                itemBuilder: ibuilder,
+                gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, mainAxisSpacing: 4.0, crossAxisSpacing: 4.0)
+              )
+            ),
+            new Flexible(
+              flex: 1,
+              child: _buttonComponent
+            )
+          ]
+        )
+      );
+    });
   }
 
   _fetch() async {
-    if (_imageQueue.length < 20 && _page < 10) {
-      while (_loadingMutex.locked) {
-        await new Future.delayed(new Duration(milliseconds: 1));
-      }
-      await _loadingMutex.synchronized(() async{
-        if (_imageQueue.length < 20) {
-          _page++;
-          await _load();
-        }
-      });
-    }
     return _imageQueue.removeFirst();
   }
 
   Future<Map> req(index) {
-      return _fetch().then((m) {
-        if (_imageQueue.length == 0) {
-          return {'undefined' : true};
-        } else {
-          return m;
-        }
-      });
+      return _fetch().then((m) {return m;});
   }
 
 
   Widget ibuilder(BuildContext context, int index) {
-    if (_stopped) {return null;} else{
     return new FutureBuilder<Map>(
       future: req(index),
       builder: (BuildContext context, AsyncSnapshot<Map> snapshot) {
@@ -96,26 +120,33 @@ class _SearchPageState extends State<SearchPage> {
           case ConnectionState.waiting: return new Container(color: Colors.grey.shade300);
           default:
             if (snapshot.hasError){
-              print(snapshot.error);
               return new Container(color: Colors.red.shade300);
             } else {
-              if (snapshot.data.containsKey('undefined')) {
-                _stopped = true;
-                return new Container();
-              } else {
-                return new Container(
-                  color: Colors.grey.shade300,
-                  child: new Image.network(
-                    snapshot.data["sample_url"],
-                    fit: BoxFit.cover
+              return new Stack(
+                children: <Widget>[
+                  new Positioned.fill(
+                    child: new Image.network(
+                      snapshot.data["sample_url"],
+                      fit: BoxFit.cover
+                    )
+                  ),
+                  new Positioned.fill(
+                    child: new ImageButton(
+                      json: snapshot.data,
+                      color: Colors.grey.shade300,
+                      context: context,
+                      child: new Container(
+                        color: new Color(0x00000000)
+                      )
+                    )
                   )
-                );
-              }
-            }
+                ]
+              );
+          }
         }
       }
     );
-  }}
+  }
 
   @override
   void initState() {

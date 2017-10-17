@@ -29,7 +29,7 @@ class _IndexPageState extends State<IndexPage> {
   void _search(){
     Navigator.of(context).push(new PageRouteBuilder(
       pageBuilder: (BuildContext context, _, __) {
-        return new SearchPage(title: 'Search', search: search);
+        return new SearchPage(title: 'Search', search: search, page: 1);
       }
     ));
   }

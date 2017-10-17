@@ -23,9 +23,6 @@ class MobiSix extends StatelessWidget {
         brightness: Brightness.dark,
       ),
       home: new IndexPage(title: 'Mobisix'),//, url: 'https://e621.net/post/show.json?id=1356446'),
-      routes: <String, WidgetBuilder> {
-        '/search': (BuildContext context) => new ImageViewPage(title: 'page A', url: "sample.com"),
-      },
     );
   }
 }
