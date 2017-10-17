@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:synchronized/synchronized.dart';
 import './LoadingPage.dart';
 
 class SearchPage extends StatefulWidget {
@@ -24,105 +26,108 @@ class _SearchPageState extends State<SearchPage> {
 
   final String title;
   final String search;
+  Widget _currentComponent;
+  Queue<Map> _imageQueue = new Queue();
+  int _page = 0;
+  bool _stopped = false;
+  var _loadingMutex = new SynchronizedLock();
 
-  /*It's extremely hard to make what I want when dealing with async so I'm putting it off for now.*/
-  /*Future req() {
-    page++;
-    return httpClient.read("https://e621.net/post/index.json?limit=30&page=" + page.toString() + "&tags=" + search,
-      headers: {"User-Agent" : "MobiSix v0.1"}).then((res) {return res;});
-  }
-
-  Widget ibuilder (BuildContext context, int index) {
-    if (ind > 29 || page == 0){
-      var future = req();
-      future.then( (res) {
-        this.response = res;
-        this.json = JSON.decode(response);
-        this.ind = 0;
-        if (page > 300 || ind > json.length) return null;
-        Map img = json[ind];
-        ind++;
-        return new Container(
-          color: Colors.grey.shade300,
-          child: new Image.network(
-            img["sample_url"],
-            fit: BoxFit.cover
+  _load() async{
+    print("loading!");
+    print(_page);
+    var httpClient = createHttpClient();
+    var res = await httpClient.read("https://e621.net/post/index.json?limit=100&page=" + _page.toString() + "&tags=" + search,
+      headers: {"User-Agent" : "MobiSix v0.1"});
+    var json = JSON.decode(res);
+    httpClient.close();
+    _imageQueue.addAll(json);
+    if (_page == 0) {
+      if (_imageQueue.length < 100) _page = 10;
+      setState((){
+        _currentComponent = new Scaffold(
+          appBar: new AppBar(
+            title: new Text(title),
+          ),
+          body: new GridView.builder(
+            padding: const EdgeInsets.all(10.0),
+            itemBuilder: ibuilder,
+            gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, mainAxisSpacing: 4.0, crossAxisSpacing: 4.0)
           )
         );
       });
     } else {
-      if (page > 300 || ind > json.length) return null;
-      Map img = json[ind];
-      ind++;
-      return new Container(
-        color: Colors.grey.shade300,
-        child: new Image.network(
-          img["sample_url"],
-          fit: BoxFit.cover
-        )
-      );
+      if (_imageQueue.length < 100) _page = 10;
     }
-  }*/
-
-  Future<List> req(index) {
-    var httpClient = createHttpClient();
-    return httpClient.read("https://e621.net/post/index.json?limit=1&page=" + index.toString() + "&tags=" + search,
-      headers: {"User-Agent" : "MobiSix v0.1"}).then((res) {httpClient.close(); return JSON.decode(res);});
   }
 
-/*  Widget ibuilder (BuildContext context, int index) {
-    if (index > 750) return null;
-    Future<List> future = req(index);
-    future.then((res){
-      if (res.length==0) return null;
-      Map img = res[0];
-      print(img);
-      return new Container(
-        color: Colors.grey.shade300,
-        child: new Image.network(
-          img["sample_url"],
-          fit: BoxFit.cover
-        )
-      );
-    });
-  } */
+  _fetch() async {
+    if (_imageQueue.length < 20 && _page < 10) {
+      while (_loadingMutex.locked) {
+        await new Future.delayed(new Duration(milliseconds: 1));
+      }
+      await _loadingMutex.synchronized(() async{
+        if (_imageQueue.length < 20) {
+          _page++;
+          await _load();
+        }
+      });
+    }
+    return _imageQueue.removeFirst();
+  }
+
+  Future<Map> req(index) {
+      return _fetch().then((m) {
+        if (_imageQueue.length == 0) {
+          return {'undefined' : true};
+        } else {
+          return m;
+        }
+      });
+  }
+
 
   Widget ibuilder(BuildContext context, int index) {
-    return new FutureBuilder<List>(
+    if (_stopped) {return null;} else{
+    return new FutureBuilder<Map>(
       future: req(index),
-      builder: (BuildContext context, AsyncSnapshot<List> snapshot) {
+      builder: (BuildContext context, AsyncSnapshot<Map> snapshot) {
         switch (snapshot.connectionState) {
           case ConnectionState.none: return new Container();
           case ConnectionState.waiting: return new Container(color: Colors.grey.shade300);
           default:
             if (snapshot.hasError){
+              print(snapshot.error);
               return new Container(color: Colors.red.shade300);
-              print (snapshot.error);
             } else {
-              return new Container(
-                color: Colors.grey.shade300,
-                child: new Image.network(
-                  snapshot.data[0]["sample_url"],
-                  fit: BoxFit.cover
-                )
-              );
+              if (snapshot.data.containsKey('undefined')) {
+                _stopped = true;
+                return new Container();
+              } else {
+                return new Container(
+                  color: Colors.grey.shade300,
+                  child: new Image.network(
+                    snapshot.data["sample_url"],
+                    fit: BoxFit.cover
+                  )
+                );
+              }
             }
         }
       }
     );
+  }}
+
+  @override
+  void initState() {
+    super.initState();
+
+    _currentComponent = new LoadingPage (title: title);
+
+    _load();
   }
 
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
-      appBar: new AppBar(
-        title: new Text(title),
-      ),
-      body: new GridView.builder(
-        padding: const EdgeInsets.all(20.0),
-        itemBuilder: ibuilder,
-        gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, mainAxisSpacing: 2.0, crossAxisSpacing: 2.0)
-      )
-    );
+    return _currentComponent;
   }
 }

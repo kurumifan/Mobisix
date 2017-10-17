@@ -35,10 +35,10 @@ class _ImageViewPageState extends State<ImageViewPage> {
       ),
       body: new Center(
         child: new ListView(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(10.0),
           children: <Widget>[
             new Container(
-              margin: new EdgeInsets.only(bottom: 8.0),
+              margin: new EdgeInsets.only(bottom: 4.0),
               child: new Image.network(json['file_url'])
             ),
             new RaisedButton(onPressed: _save,
