@@ -34,9 +34,10 @@ class _SearchPageState extends State<SearchPage> {
   Queue<Map> _imageQueue = new Queue();
 
   _forward() {
+    Navigator.of(context).pop();
     Navigator.of(context).push(new PageRouteBuilder(
       pageBuilder: (BuildContext context, _, __) {
-        return new SearchPage(title: 'Search', search: search, page: page + 1);
+        return new SearchPage(title: 'Search - page ' + (page + 1).toString(), search: search, page: page + 1);
       }
     ));
   }
@@ -61,7 +62,7 @@ class _SearchPageState extends State<SearchPage> {
 
     var ch = <Widget>[];
 
-    if (page > 9 || _imageQueue.length < 60){
+    if (/*page > 9 ||*/ _imageQueue.length < 60){
       ch.add(backButton);
     } else if (page == 1 && _imageQueue.length == 60) {
       ch.add(forwardButton);
@@ -126,11 +127,29 @@ class _SearchPageState extends State<SearchPage> {
             if (snapshot.hasError){
               return new Container(color: Colors.red.shade300);
             } else {
+              // i'll fix this one later
+              /*return new Container(
+                child: new ImageButton(
+                  json: snapshot.data
+                  color: Colors.grey.shade300,
+                  context: context,
+                  child: new Container(
+                    color: new Color(0x00000000)
+                  )
+                ),
+                decoration: new BoxDecoration(
+                  image: new DecorationImage(
+                    image: new NetworkImage(snapshot.data["preview_url"])
+                    fit: BoxFit.cover
+                  )
+                )
+              );*/
+              // current search button thingy
               return new Stack(
                 children: <Widget>[
                   new Positioned.fill(
                     child: new Image.network(
-                      snapshot.data["sample_url"],
+                      snapshot.data["preview_url"],
                       fit: BoxFit.cover
                     )
                   ),

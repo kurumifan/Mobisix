@@ -11,10 +11,15 @@ dependencies:
 
   synchronized: "^1.1.0"
 
+  chewie: "^0.2.0"
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
 flutter:
-
   uses-material-design: true
+
+  assets:
+    - assets/loading.gif
+    

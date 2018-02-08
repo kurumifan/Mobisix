@@ -29,7 +29,7 @@ class _IndexPageState extends State<IndexPage> {
   void _search(){
     Navigator.of(context).push(new PageRouteBuilder(
       pageBuilder: (BuildContext context, _, __) {
-        return new SearchPage(title: 'Search', search: search, page: 1);
+        return new SearchPage(title: 'Search - page 1', search: search, page: 1);
       }
     ));
   }
@@ -41,15 +41,18 @@ class _IndexPageState extends State<IndexPage> {
         title: new Text(title),
       ),
       body: new Center(
-        child: new Padding(
-          padding: const EdgeInsets.all(20.0),
+        child: new Container(
+          margin: const EdgeInsets.all(20.0),
           child: new Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              new TextField(
-                style: new TextStyle(height: 2.0),
-                onChanged: _updateSearch,
-                textAlign: TextAlign.center
+              new Container(
+                margin: const EdgeInsets.only(bottom: 4.0),
+                child: new TextField(
+                  style: new TextStyle(height: 2.0),
+                  onChanged: _updateSearch,
+                  textAlign: TextAlign.center
+                )
               ),
               new RaisedButton(
                 child: new Text('Search',

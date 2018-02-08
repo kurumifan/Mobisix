@@ -13,7 +13,8 @@ class LoadingPage extends StatelessWidget{
         title: new Text(title),
       ),
       body: new Center(
-        child: new CupertinoActivityIndicator(animating: true),
+        //child: new CupertinoActivityIndicator(animating: true),
+        child: new Image.asset('assets/loading.gif')
       ),
     );
   }

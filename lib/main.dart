@@ -22,7 +22,7 @@ class MobiSix extends StatelessWidget {
         accentColor: Colors.lightBlueAccent.shade100,
         brightness: Brightness.dark,
       ),
-      home: new IndexPage(title: 'Mobisix'),//, url: 'https://e621.net/post/show.json?id=1356446'),
+      home: new IndexPage(title: 'Mobisix'),
     );
   }
 }
