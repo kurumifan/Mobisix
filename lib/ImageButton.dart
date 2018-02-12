@@ -8,6 +8,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/src/material/button.dart';
 import 'package:flutter/src/material/theme.dart';
+import 'package:flutter/src/material/colors.dart';
+import 'package:flutter/src/material/button_theme.dart';
 import './ImageViewPage.dart';
 
 class ImageButton extends StatelessWidget {

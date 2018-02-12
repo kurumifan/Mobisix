@@ -9,9 +9,7 @@ dependencies:
 
   path_provider: "^0.2.1+1"
 
-  synchronized: "^1.1.0"
-
-  chewie: "^0.2.0"
+  chewie: "^0.3.0"
 
 dev_dependencies:
   flutter_test:
@@ -22,4 +20,3 @@ flutter:
 
   assets:
     - assets/loading.gif
-    

@@ -41,7 +41,7 @@ class _ImageViewPageState extends State<ImageViewPage> {
     if (json['file_ext'] == "webm" || json['file_ext'] == "mp4") {
       ch = new Chewie (
         new VideoPlayerController(json['file_url']),
-        aspectRatio: 1080/720,
+        aspectRatio: json['width']/json['height'],
         autoPlay: true,
         looping: true
       );

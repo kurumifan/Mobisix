@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:synchronized/synchronized.dart';
 import './LoadingPage.dart';
 import './ImageViewPage.dart';
 import './ImageButton.dart';
@@ -44,6 +43,11 @@ class _SearchPageState extends State<SearchPage> {
 
   _back() {
     Navigator.of(context).pop();
+    Navigator.of(context).push(new PageRouteBuilder(
+      pageBuilder: (BuildContext context, _, __) {
+        return new SearchPage(title: 'Search - page ' + (page - 1).toString(), search: search, page: page - 1);
+      }
+    ));
   }
 
   _load() async {
@@ -55,7 +59,7 @@ class _SearchPageState extends State<SearchPage> {
 
     var httpClient = createHttpClient();
     var res = await httpClient.read("https://e621.net/post/index.json?limit=60&page=" + page.toString() + "&tags=" + search,
-      headers: {"User-Agent" : "MobiSix v0.1"});
+      headers: {"User-Agent" : "MobiSix v0.2a"});
     var json = JSON.decode(res);
     httpClient.close();
     _imageQueue.addAll(json);
@@ -127,24 +131,6 @@ class _SearchPageState extends State<SearchPage> {
             if (snapshot.hasError){
               return new Container(color: Colors.red.shade300);
             } else {
-              // i'll fix this one later
-              /*return new Container(
-                child: new ImageButton(
-                  json: snapshot.data
-                  color: Colors.grey.shade300,
-                  context: context,
-                  child: new Container(
-                    color: new Color(0x00000000)
-                  )
-                ),
-                decoration: new BoxDecoration(
-                  image: new DecorationImage(
-                    image: new NetworkImage(snapshot.data["preview_url"])
-                    fit: BoxFit.cover
-                  )
-                )
-              );*/
-              // current search button thingy
               return new Stack(
                 children: <Widget>[
                   new Positioned.fill(
