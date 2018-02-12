@@ -6,4 +6,4 @@ This app currently supports searching for and viewing images and videos. Most (p
 This app is to be considered NSFW due to sexual content appearing on e621.
 
 ## Installation
-You can use [Flutter](https://flutter.io) to build and run this app.
+You can download the release [here](https://github.com/reindeer-cafe/Mobisix/releases).
