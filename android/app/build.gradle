@@ -31,7 +31,7 @@ android {
         minSdkVersion 16
         targetSdkVersion 27
         versionCode 1
-        versionName "Alpha 0.2"
+        versionName "0.2a"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
@@ -49,7 +49,7 @@ android {
             signingConfig signingConfigs.release
         }
     }
-    
+
 }
 
 flutter {
