@@ -25,8 +25,10 @@ class _ImageViewPageState extends State<ImageViewPage> {
   final Map json;
   String img_url;
   String img_path;
+  List<Map> commentsjson;
   int _perm = 0;
   Widget _currentComponent;
+  bool _loading;
 
   _ImageViewPageState(this.title, this.json);
 
@@ -34,6 +36,7 @@ class _ImageViewPageState extends State<ImageViewPage> {
     Widget ch;
     TextStyle scorestyle;
     Text ratingtext;
+    var comments = <Widget>[];
 
     TextStyle defaultstyle = new TextStyle(fontSize: 18.0);
 
@@ -78,6 +81,38 @@ class _ImageViewPageState extends State<ImageViewPage> {
         style: new TextStyle(color: Colors.lightGreen.shade700, fontSize: 18.0)
       );
     }
+    RegExp exp = new RegExp(r']"(.*)":\/');
+    for (var comment in commentsjson) {
+      var body = "";
+      var name = "";
+      var match = exp.firstMatch(comment["body"]);
+      if (match == null) {
+        body = comment['body'];
+      } else {
+        // dart pls add end of string indexes for substring so i can do name = (match.group(0)).substring(2, -3)
+        name = ((match.group(0)).replaceAll(new RegExp(r']"'), '')).replaceAll(new RegExp(r'":\/'), '');
+        body = comment['body'].replaceAll(new RegExp(r'\[quote\]((.|\n|\r|\r\n)*)\[\/quote\]'), '@' + name + "\n");
+      }
+      comments.add(new Container(
+        margin: const EdgeInsets.only(bottom: 8.0),
+        padding: const EdgeInsets.all(4.0),
+
+        color: Colors.blueAccent.shade700,
+        child: new Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            new Text(
+              "Posted by " + comment['creator'] + " at " + comment['created_at'] + "\n",
+              style: new TextStyle(fontStyle: FontStyle.italic)
+            ),
+
+            new Text(
+              body
+            )
+          ]
+        )
+      ));
+    }
 
     return new Center(
       child: new ListView(
@@ -88,7 +123,7 @@ class _ImageViewPageState extends State<ImageViewPage> {
             child: ch
           ),
           new Container(
-            margin: const EdgeInsets.only(bottom: 4.0),
+            margin: const EdgeInsets.only(bottom: 8.0, left: 12.0, right: 12.0),
             child: new RaisedButton(
               child: new Text("Download",
                 textAlign: TextAlign.center),
@@ -96,7 +131,7 @@ class _ImageViewPageState extends State<ImageViewPage> {
             )
           ),
           new Container(
-            padding: const EdgeInsets.symmetric(horizontal: 48.0),
+            padding: const EdgeInsets.only(left: 48.0, right: 48.0, bottom: 12.0),
             child: new Column(
               children: <Widget>[
                 new Row(
@@ -145,6 +180,11 @@ class _ImageViewPageState extends State<ImageViewPage> {
               ]
             )
           ),
+
+          new Column(
+            children: comments
+          )
+
         ],
       ),
     );
@@ -177,6 +217,17 @@ class _ImageViewPageState extends State<ImageViewPage> {
     }
   }
 
+  _load() async {
+    var httpClient = createHttpClient();
+    var res = await httpClient.read("https://e621.net/comment/index.json?post_id=" + json['id'].toString(),
+      headers: {"User-Agent" : "MobiSix v0.3a"});
+    httpClient.close();
+    setState((){
+      commentsjson = JSON.decode(res);
+      _loading = false;
+    });
+  }
+
   _getPerms() async {
     try {
       int permResult = await platform.invokeMethod('getPermissions');
@@ -187,16 +238,29 @@ class _ImageViewPageState extends State<ImageViewPage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+
+    _loading = true;
+
+    _load();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    img_url = json['file_url'];
-    img_path = json['md5'] + '.' + json['file_ext'];
-    return new Scaffold(
-      appBar: new AppBar(
-        title: new Text(title),
-      ),
-      body: new Builder(
-        builder: _build
-      )
-    );
+    if (_loading) {
+      return new LoadingPage (title: title);
+    } else {
+      img_url = json['file_url'];
+      img_path = json['md5'] + '.' + json['file_ext'];
+      return new Scaffold(
+        appBar: new AppBar(
+          title: new Text(title),
+        ),
+        body: new Builder(
+          builder: _build
+        )
+      );
+    }
   }
 }

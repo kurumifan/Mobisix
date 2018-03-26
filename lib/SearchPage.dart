@@ -59,7 +59,7 @@ class _SearchPageState extends State<SearchPage> {
 
     var httpClient = createHttpClient();
     var res = await httpClient.read("https://e621.net/post/index.json?limit=60&page=" + page.toString() + "&tags=" + search,
-      headers: {"User-Agent" : "MobiSix v0.2a"});
+      headers: {"User-Agent" : "MobiSix v0.3a"});
     var json = JSON.decode(res);
     httpClient.close();
     _imageQueue.addAll(json);
